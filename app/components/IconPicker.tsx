@@ -24,7 +24,7 @@ const IconPicker : React.FC<IconPickerProps> = ({selected, onIconSelect}) => {
 
     const handleIconClick = (iconName : IconName) => {
         setSelectedIcon(iconName)
-        onIconSelect(iconName)
+        onIconSelect?.(iconName)
         const modal = document.getElementById('my_modal_3') as HTMLDialogElement
         if(modal) {
             modal.close();
