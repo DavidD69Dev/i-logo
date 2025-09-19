@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import IconPicker from "./components/IconPicker";
-import { ChangeEvent, useState } from "react";
+import { useState } from "react";
 import { Download, icons } from "lucide-react";
 import ColorPicker from "./components/ColorPicker";
 import React from "react";
@@ -252,7 +252,7 @@ export default function Home() {
         setIsDownloading(false)
         setDownLoadCompleted(true)
       })
-      .catch((error : any) => {
+      .catch((error : unknown) => {
         console.error(error)
         setIsDownloading(false)
       })
