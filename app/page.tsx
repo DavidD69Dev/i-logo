@@ -1,103 +1,481 @@
+"use client"
+
 import Image from "next/image";
+import IconPicker from "./components/IconPicker";
+import { ChangeEvent, useState } from "react";
+import { Download, icons } from "lucide-react";
+import ColorPicker from "./components/ColorPicker";
+import React from "react";
+import domtoimage from "dom-to-image"
+import confetti from "canvas-confetti"
+
+type IconName = keyof typeof icons;
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const [selectedIcon, setSelectedIcon] = useState<string>("Apple")
+  const SelectedIconComponent = selectedIcon && icons[selectedIcon as IconName] ?
+    icons[selectedIcon as IconName]: null
+  const [iconeSize, setIconeSize ] = useState<number>(200)
+  const [iconeStrokeWidth, setIconeStrokeWidth ] = useState<number>(3) 
+  const [iconeRotation, setIconeRotation] = useState<number>(0)
+  const [shadow, setShadow] = useState<string>("shadow-none")
+  const [shadowNumber, setShadowNumber] = useState<number>(0) 
+  const [radius, setRadius] = useState<number>(10)
+  const [activeTab, setActiveTab] = useState<"stroke" | "background" | "fill">("stroke")
+  const [iconStrokeColor, setIconStrokeColor] = useState<string>("black")
+  const [backgroundColor, setBackgroundColor] = useState<string>("linear-gradient(45deg, rgba(255, 111, 97, 1) 0%, rgba(255, 185, 120, 1) 100%")
+  const [fillColor, setFillColor] = useState<string>("yellow")
+  const [isDownloading, setIsDownloading] = useState<boolean>(false);
+  const [downloadCompleted, setDownLoadCompleted] = useState<boolean>(false);
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
+  const handleIconeSizeChange = (e:React.ChangeEvent<HTMLInputElement>) => {
+    setIconeSize(Number(e.target.value))
+  }
+
+  const handleStrokeWidthChange = (e:React.ChangeEvent<HTMLInputElement>) => {
+    setIconeStrokeWidth(Number(e.target.value))
+  }
+
+  const handleRotationChange = (e:React.ChangeEvent<HTMLInputElement>) => {
+    setIconeRotation(Number(e.target.value))
+  }
+
+   const handleShadowNumberChange = (e:React.ChangeEvent<HTMLInputElement>) => {
+    const value = Number(e.target.value)
+    setShadowNumber(value)
+    switch (value) {
+      case 25 :
+        setShadow("shadow-sm");
+        break;
+        case 50 :
+          setShadow("shadow-md");
+        break;
+        case 75 :
+          setShadow("shadow-lg");
+        break;
+        case 100 :
+          setShadow("shadow-2xl");
+        break;
+        default:
+          setShadow("shadow-none");
+
+    }
+  }
+
+  const handleRadiusChange = (e:React.ChangeEvent<HTMLInputElement>) => {
+    setRadius(Number(e.target.value))
+  }
+
+  const getBackgroundStyle = () => {
+    return backgroundColor.startsWith("linear-gradient")
+    ? {background : backgroundColor}
+    : {backgroundColor : backgroundColor}
+  }
+
+    const getPresetBackgroundStyle = (color: string) => {
+    return color.startsWith("linear-gradient")
+      ? { background: color }
+      : { backgroundColor: color }
+  }
+
+  const logoPresets = [
+    {
+      id: 1,
+      backgroundColor: "linear-gradient(45deg, rgba(255, 126, 95, 1) 0%, rgba(254, 180, 123, 1) 100%)", // Dégradé chaleureux
+      radius: 8,
+      fillColor: "blue",
+      iconRotation: 0,
+      iconStrokeColor: "white",
+      iconStrokeWidth: 2,
+      iconSize: 200,
+      icon: "VenetianMask",
+    },
+    {
+      id: 2,
+      backgroundColor: "linear-gradient(45deg, rgba(255, 111, 97, 1) 0%, rgba(255, 185, 120, 1) 100%)", // Dégradé orange doux
+      radius: 12,
+      fillColor: "yellow",
+      iconRotation: 15,
+      iconStrokeColor: "black",
+      iconStrokeWidth: 3,
+      iconSize: 220,
+      icon: "Apple",
+    },
+    {
+      id: 3,
+      backgroundColor: "linear-gradient(45deg, rgba(79, 172, 254, 1) 0%, rgba(0, 242, 254, 1) 100%)", // Dégradé bleu clair
+      radius: 16,
+      fillColor: "violet",
+      iconRotation: 30,
+      iconStrokeColor: "white",
+      iconStrokeWidth: 4,
+      iconSize: 240,
+      icon: "Bell",
+    },
+    {
+      id: 4,
+      backgroundColor: "linear-gradient(45deg, rgba(159, 86, 217, 1) 0%, rgba(52, 152, 219, 1) 100%)", // Dégradé violet/bleu
+      radius: 28,
+      fillColor: "black",
+      iconRotation: 90,
+      iconStrokeColor: "orange",
+      iconStrokeWidth: 4,
+      iconSize: 300,
+      icon: "Heart",
+    },
+    {
+      id: 5,
+      backgroundColor: "linear-gradient(45deg, rgba(255, 175, 189, 1) 0%, rgba(255, 195, 160, 1) 100%)", // Dégradé rose/jaune
+      radius: 32,
+      fillColor: "white",
+      iconRotation: 120,
+      iconStrokeColor: "#f1c40f",
+      iconStrokeWidth: 2,
+      iconSize: 220,
+      icon: "MessageCircle",
+    },
+    {
+      id: 6,
+      backgroundColor: "#F29F58", // Dégradé magenta/orange
+      radius: 36,
+      fillColor: "#800080",
+      iconRotation: 150,
+      iconStrokeColor: "#fff",
+      iconStrokeWidth: 3,
+      iconSize: 240,
+      icon: "Sun",
+    },
+    {
+      id: 7,
+      backgroundColor: "linear-gradient(45deg, rgba(54, 209, 220, 1) 0%, rgba(91, 134, 229, 1) 100%)", // Dégradé bleu/vert
+      radius: 40,
+      fillColor: "#008000",
+      iconRotation: 180,
+      iconStrokeColor: "white",
+      iconStrokeWidth: 4,
+      iconSize: 260,
+      icon: "Zap",
+    },
+    {
+      id: 8,
+      backgroundColor: "red", // Dégradé bleu/rouge
+      radius: 14,
+      fillColor: "blue",
+      iconRotation: 75,
+      iconStrokeColor: "#fff",
+      iconStrokeWidth: 3,
+      iconSize: 200,
+      icon: "Smile",
+    },
+    {
+      id: 9,
+      backgroundColor: "#4335A7", // Dégradé vert/rose
+      radius: 18,
+      fillColor: "red",
+      iconRotation: 135,
+      iconStrokeColor: "red",
+      iconStrokeWidth: 4,
+      iconSize: 280,
+      icon: "ArrowUp",
+    },
+    {
+      id: 10,
+      backgroundColor: "linear-gradient(45deg, rgba(255, 105, 180, 1) 0%, rgba(244, 67, 54, 1) 100%)", // Dégradé rose/rouge
+      radius: 22,
+      fillColor: "#f1c40f",
+      iconRotation: 75,
+      iconStrokeColor: "#000",
+      iconStrokeWidth: 2,
+      iconSize: 210,
+      icon: "Calendar",
+    },
+    {
+      id: 11,
+      backgroundColor: "#D3F1DF", // Dégradé vert/orange
+      radius: 20,
+      fillColor: "#e84393",
+      iconRotation: 165,
+      iconStrokeColor: "#FFF",
+      iconStrokeWidth: 3,
+      iconSize: 300,
+      icon: "Star",
+    },
+    {
+      id: 12,
+      backgroundColor: "#525B44", // Dégradé orange/bleu
+      radius: 26,
+      fillColor: "#8e44ad",
+      iconRotation: 180,
+      iconStrokeColor: "white",
+      iconStrokeWidth: 4,
+      iconSize: 250,
+      icon: "Cloud",
+    }
+  ];
+
+  const handlePresetSelect = (preset : typeof logoPresets[0]) => {
+    setSelectedIcon(preset.icon)
+     setIconeSize(preset.iconSize);
+    setIconStrokeColor(preset.iconStrokeColor);
+    setIconeStrokeWidth(preset.iconStrokeWidth);
+    setIconeRotation(preset.iconRotation);
+    setBackgroundColor(preset.backgroundColor);
+    setFillColor(preset.fillColor);
+    setRadius(preset.radius * 8)
+  }
+
+  const handleDownloadImage = (format : "png" | "svg") => {
+    setIsDownloading(true)
+    setDownLoadCompleted(false)
+    const element = document.getElementById("iconContainer")
+    if(element){
+      let imagePromise;
+      if(format == "svg") {
+        imagePromise = domtoimage.toSvg(element, {bgcolor:undefined})
+      }else {
+        imagePromise = domtoimage.toPng(element, {bgcolor:undefined})
+      }
+      imagePromise
+      .then((dataUrl : string) => {
+        const link = document.createElement("a")
+        link.href = dataUrl
+        link.download = `logo.${format}`
+        link.click()
+
+        confetti({
+          particleCount: 1000,
+          spread: 100,
+          origin: {y:0.6},
+          zIndex: 999
+        })
+
+        setIsDownloading(false)
+        setDownLoadCompleted(true)
+      })
+      .catch((error : any) => {
+        console.error(error)
+        setIsDownloading(false)
+      })
+    }
+  }
+
+
+  return (
+   <div>
+      
+    <section className="flex flex-col md:flex-row md:justify-between">
+      <div className="md:w-1/4 p-5">
+      <div className="flex items-center justify-center space-x-2 mb-4 w-full">
+        <button className={`btn w-1/3 ${activeTab === "stroke" ? "btn-secondary" : ""}`}
+        onClick={() => setActiveTab("stroke")}
+        >
+          Bordure
+        </button>
+
+        <button className={`btn w-1/3 ${activeTab === "stroke" ? "btn-secondary" : ""}`}
+        onClick={() => setActiveTab("background")}
+        >
+          Arrière-plan
+        </button>
+
+        <button className={`btn w-1/3 ${activeTab === "stroke" ? "btn-secondary" : ""}`}
+        onClick={() => setActiveTab("fill")}
+        >
+          Remplissage
+        </button>
+
+      </div>
+      <div>
+        {activeTab === "stroke" && (
+          <ColorPicker color={"iconStrokeColor"} allowGradient={false} onColorChange={setIconStrokeColor}/>
+        )}
+
+        {activeTab === "background" && (
+          <ColorPicker color={"backgroundColor"} allowGradient={true} onColorChange={setBackgroundColor}/>
+        )}
+
+         {activeTab === "fill" && (
+          <ColorPicker color={"fillColor"} allowGradient={false} onColorChange={setFillColor}/>
+        )}
+
+        
+
+      </div>
+      </div>
+      <div className="md:w2/4 flex justify-center items-center h-screen bg-[url('/file1.svg')] bg-cover bg-center border border-base-200 pt-4 relative">
+        <div className="flex items-center justify-between absolute top-0 left-0 bg-base-100 z-50 w-full p-3">
+          <div className="flex items-center font-bold italic text-2xl">
             <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
+            src="/logo.png"
+            width={500}
+            height={500}
+            className="w-10 h-10"
+            alt="logo"
             />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+            <span className="text-secondary ml-2">E</span>Logo
+          </div>
+          <div className="flex items-center">
+            <IconPicker onIconSelect={setSelectedIcon} selected={selectedIcon}/>
+
+            <button className="btn ml-5" 
+
+            onClick={() => {
+            const m = document.getElementById('my_modal_1')as HTMLDialogElement
+            if(m){
+            m.showModal()
+            setDownLoadCompleted(false)
+           }
+            }}>
+            Télécharger <Download className="w-4"/>
+            </button>
+          </div>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+
+        <div className="bg-neutral-content/10 hover:bg-neutral-content/20 aspect-square border-2 border-base-300 hover:border-neutral/15 border-dashed p-5 md:p-20">
+          <div
+          id="iconContainer"
+          className={`w-[450px] h-[450px] flex justify-center items-center ${shadow}`}
+          style={{
+            ...getBackgroundStyle(),
+            borderRadius: `${radius}px`
+          }}
+          
+          >
+            {SelectedIconComponent && (
+              <SelectedIconComponent
+              size={iconeSize}
+              style={{
+                strokeWidth : iconeStrokeWidth,
+                fill : fillColor,
+                stroke : iconStrokeColor,
+                display: "block",
+                transform : `rotate(${iconeRotation}deg)`
+              }}
+              />
+            )}
+
+          </div>
+        </div>
+      </div>
+      <div className="md:w-1/4 p-5">
+            <div className="mt-4">
+              <div className="flex justify-between mb-3 text-gray-500">
+                <label className="badge badge-ghost">Taille</label>
+                <span>{iconeSize} px</span>
+
+              </div>
+              <input type="range" min="0" max="400" value={iconeSize} onChange={handleIconeSizeChange} className="range range-secondary" />
+            </div>
+
+             <div className="mt-4">
+              <div className="flex justify-between mb-3 text-gray-500">
+                <label className="badge badge-ghost">Bordure</label>
+                <span>{iconeStrokeWidth} px</span>
+
+              </div>
+              <input type="range" min="0" max="5" value={iconeStrokeWidth} onChange={handleStrokeWidthChange} className="range range-secondary" />
+            </div>
+
+               <div className="mt-4">
+              <div className="flex justify-between mb-3 text-gray-500">
+                <label className="badge badge-ghost">Rotation</label>
+                <span>{iconeRotation}°</span>
+
+              </div>
+              <input type="range" min="0" max="360" value={iconeRotation} onChange={handleRotationChange} className="range range-secondary" />
+            </div>
+
+             <div className="mt-4">
+              <div className="flex justify-between mb-3 text-gray-500">
+                <label className="badge badge-ghost">Ombre</label>
+                <span>{shadow.replace("shadow-", "")}</span>
+
+              </div>
+              <input type="range" min="0" max="100" step={25} value={shadowNumber} onChange={handleShadowNumberChange} className="range range-secondary" />
+            </div>
+
+               <div className="mt-4">
+              <div className="flex justify-between mb-3 text-gray-500">
+                <label className="badge badge-ghost">Arrondi</label>
+                <span>{radius} px</span>
+
+              </div>
+              <input type="range" min="0" max="300" step={25} value={radius} onChange={handleRadiusChange} className="range range-secondary" />
+            </div>
+            <div className="mt-5">
+              <h3 className="text-lg font-bold mb-4">Préréglages</h3>
+              <div className="flex flex-wrap gap-2">
+                {logoPresets.map((preset) => (
+                   <div
+                  key={preset.id}
+                  className="cursor-pointer"
+                  onClick={() => handlePresetSelect(preset)}
+                >
+                  <div
+                    className={`w-16 h-16 flex justify-center items-center `}
+                    style={{
+                      ...getPresetBackgroundStyle(preset.backgroundColor),
+                      borderRadius: `${preset.radius}px`
+                    }}
+                  >
+                    {icons[preset.icon as keyof typeof icons] && (
+                      React.createElement(icons[preset.icon as keyof typeof icons], {
+                        size: 30,
+                        style: {
+                          strokeWidth: preset.iconStrokeWidth,
+                          fill: preset.fillColor,
+                          stroke: preset.iconStrokeColor,
+                          display: "block",
+                          transform: `rotate(${preset.iconRotation}deg)`
+                       }
+                        })
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+
+<dialog id="my_modal_1" className="modal">
+  <div className="modal-box">
+    <form method="dialog">
+      {/* if there is a button in form, it will close the modal */}
+      <button className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
+    </form>
+    
+
+      {isDownloading ? (
+        <div className="flex justify-center">
+          <progress className="progress w-full progress-secondary my-20"></progress>
+        </div>
+      ) : downloadCompleted ? (
+        <div className="text-centermy-4">
+          <p className="text-md font-bold">Le téléchargement a été effectué avec succès ! 🎉</p>
+        </div>
+      ) : (
+        <div>
+
+          <h3 className="font-bold text-lg text-center mb-4">Choisissez un format</h3>
+          <div className="space-x-3 flex justify-center">
+            <button className="btn"
+            onClick={() => handleDownloadImage('png')}
+            >
+              PNG
+            </button>
+
+            <button className="btn"
+            onClick={() => handleDownloadImage('svg')}
+            >
+              SVG
+            </button>
+          </div>
+        </div>
+      )}
+
+  </div>
+</dialog>
+</div>
   );
 }
